@@ -1,8 +1,13 @@
 #### Stage 1: Build the application
-FROM openjdk:8-jdk-alpine as build
+#FROM openjdk:8-jdk-alpine as build
+FROM maven:3-jdk-8 as build
 
 # Set the current working directory inside the image
 WORKDIR /app
+
+#RUN apk add dos2unix
+#RUN apk add  maven
+#RUN mvn -N io.takari:maven:wrapper
 
 # Copy maven executable to the image
 COPY mvnw .
@@ -14,13 +19,16 @@ COPY pom.xml .
 # Build all the dependencies in preparation to go offline. 
 # This is a separate step so the dependencies will be cached unless 
 # the pom.xml file has changed.
-RUN ./mvnw dependency:go-offline -B
+RUN chmod +x mvnw
+RUN mvn dependency:go-offline -B
+
 
 # Copy the project source
 COPY src src
 
 # Package the application
-RUN ./mvnw package -DskipTests
+RUN mvn package -DskipTests
+#COPY target target
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 #### Stage 2: A minimal docker image with command to run the app 
